@@ -1,7 +1,9 @@
 package com.auction.auction.auth.service
 
 import com.auction.auction.auth.dto.request.LoginRequest
+import com.auction.auction.auth.dto.response.LoginBody
 import com.auction.auction.auth.exception.LoginFailException
+import com.auction.auction.auth.jwt.JwtProvider
 import com.auction.auction.user.repo.UserInfoRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -12,9 +14,11 @@ private val log = LoggerFactory.getLogger(AuthServices::class.java)
 @Service
 class AuthServices(private final val userRepository : UserInfoRepository,
                    private final val passEncoder : PasswordEncoder,
+                   private final val JwtProvider : JwtProvider,
+                   private final val RedisService: RedisServices
                    ) {
 
-    fun Login(req: LoginRequest): Long {
+    fun Login(req: LoginRequest): LoginBody {
         log.info("넘어오는 데이터 :" + req.toString())
         val userSearch = userRepository.findByLoginId(req.id)//!!의미:null일 경우 NPE 동작
             ?: throw LoginFailException()//Elvis 연산자(?:)
@@ -34,6 +38,16 @@ class AuthServices(private final val userRepository : UserInfoRepository,
                 userSearch.passwordHash)) {
             throw LoginFailException()
         }
-       return 100
+        val AccessToken = JwtProvider.CreateAcessToken(userSearch.connectId , userSearch.loginId)
+        log.info("엑세스 토큰 :" + AccessToken)
+        val RefreshToken = JwtProvider.CreateRefreshToken(userSearch.connectId)
+        log.info("리프래쉬 토큰 :" + RefreshToken)
+        RedisService.SaveRefreshToken(userSearch.connectId ,RefreshToken)
+
+
+       return LoginBody(accessToken = AccessToken.first,
+           refreshToken = RefreshToken,
+           loginId = userSearch.loginId,
+           exp=AccessToken.second)
     }
 }
