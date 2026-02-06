@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
+import org.springframework.web.bind.annotation.GetMapping
 /*import org.springframework.validation.Errors*/
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -21,6 +22,19 @@ private val log = LoggerFactory.getLogger(AuthController::class.java)
 @RequestMapping("/api/auth")
 class AuthController(private val authServices: AuthServices, private val response: HttpServletResponse) {
 
+    @GetMapping("/login")
+    fun normalLogin(){
+
+        val services = authServices.login();
+
+
+        /*
+        return CommonResponse(message = "success" , code = "200",
+            body = , errorCode = "null")
+
+         */
+    }
+/*
     @PostMapping("/login")
     fun Login(@RequestBody req: LoginRequest/*, errors: Errors*/): CommonResponse<LoginResponse> {
           log.info("컨트롤러 데이터 : " +req)
@@ -44,5 +58,7 @@ class AuthController(private val authServices: AuthServices, private val respons
             body = Response, errorCode = "null")
     }
 
+
+ */
 
 }

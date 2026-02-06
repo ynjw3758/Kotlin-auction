@@ -4,6 +4,7 @@ import com.auction.auction.auth.dto.request.LoginRequest
 import com.auction.auction.auth.dto.response.LoginBody
 import com.auction.auction.auth.exception.LoginFailException
 import com.auction.auction.auth.jwt.JwtProvider
+import com.auction.auction.auth.oidc.OidcStatePayload
 import com.auction.auction.user.repo.UserInfoRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -15,9 +16,32 @@ private val log = LoggerFactory.getLogger(AuthServices::class.java)
 class AuthServices(private final val userRepository : UserInfoRepository,
                    private final val passEncoder : PasswordEncoder,
                    private final val JwtProvider : JwtProvider,
-                   private final val RedisService: RedisServices
+                   private final val RedisService: RedisServices,
+                   private final val OidcStateService:OidcStateService,
                    ) {
 
+    fun login(){
+
+        //Todo
+        //stat, nonce 랜덤값 생성
+        //생성된 데이터 redis의 저장
+        //keyloak으로 요청하기
+        val stat = OidcStateService.generateState()
+        val nonce = OidcStateService.generateNonce()
+        log.info("stat :" + stat)
+        log.info("nonece:" + nonce)
+        OidcStateService.store(
+            stat,
+            OidcStatePayload(
+                nonce = nonce,
+                returnUrl = null,        // 필요하면 넣기
+                codeVerifier = null      // PKCE 쓰면 넣기
+            )
+        )
+
+    }
+
+/*
     fun Login(req: LoginRequest): LoginBody {
         log.info("넘어오는 데이터 :" + req.toString())
         val userSearch = userRepository.findByLoginId(req.id)//!!의미:null일 경우 NPE 동작
@@ -50,4 +74,6 @@ class AuthServices(private final val userRepository : UserInfoRepository,
            loginId = userSearch.loginId,
            exp=AccessToken.second)
     }
+
+ */
 }
