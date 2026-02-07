@@ -4,11 +4,13 @@ import com.auction.auction.auth.dto.request.LoginRequest
 import com.auction.auction.auth.dto.response.LoginBody
 import com.auction.auction.auth.exception.LoginFailException
 import com.auction.auction.auth.jwt.JwtProvider
+import com.auction.auction.auth.oidc.KeycloakAuthUrlBuilder
 import com.auction.auction.auth.oidc.OidcStatePayload
 import com.auction.auction.user.repo.UserInfoRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
+
 
 private val log = LoggerFactory.getLogger(AuthServices::class.java)
 
@@ -18,9 +20,10 @@ class AuthServices(private final val userRepository : UserInfoRepository,
                    private final val JwtProvider : JwtProvider,
                    private final val RedisService: RedisServices,
                    private final val OidcStateService:OidcStateService,
+                   private final val KeycloakAuthUrlBuilder : KeycloakAuthUrlBuilder
                    ) {
 
-    fun login(){
+    fun login():String{
 
         //Todo
         //stat, nonce 랜덤값 생성
@@ -28,8 +31,6 @@ class AuthServices(private final val userRepository : UserInfoRepository,
         //keyloak으로 요청하기
         val stat = OidcStateService.generateState()
         val nonce = OidcStateService.generateNonce()
-        log.info("stat :" + stat)
-        log.info("nonece:" + nonce)
         OidcStateService.store(
             stat,
             OidcStatePayload(
@@ -38,6 +39,8 @@ class AuthServices(private final val userRepository : UserInfoRepository,
                 codeVerifier = null      // PKCE 쓰면 넣기
             )
         )
+        val keyloak_response = KeycloakAuthUrlBuilder.buildNormal(state = stat ,nonce = nonce )
+        return keyloak_response
 
     }
 

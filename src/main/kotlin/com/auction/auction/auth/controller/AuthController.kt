@@ -8,13 +8,16 @@ import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 /*import org.springframework.validation.Errors*/
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.Duration
+import org.springframework.http.HttpStatus
+import java.net.URI
 
 private val log = LoggerFactory.getLogger(AuthController::class.java)
 
@@ -22,17 +25,27 @@ private val log = LoggerFactory.getLogger(AuthController::class.java)
 @RequestMapping("/api/auth")
 class AuthController(private val authServices: AuthServices, private val response: HttpServletResponse) {
 
+    @GetMapping("/callback")
+    fun callback(
+        @RequestParam code: String,
+        @RequestParam state: String
+    ): ResponseEntity<Void> {
+        //authService.handleCallback(code, state)
+         log.info("state :" + state)
+         log.info("code:" + code)
+        // 로그인 성공 후 프론트로 보내거나(302), 그냥 OK 내려도 됨
+        return ResponseEntity.status(302)
+            .header("Location", "http://localhost:3000/login/success")
+            .build()
+    }
+
     @GetMapping("/login")
-    fun normalLogin(){
+    fun normalLogin(): ResponseEntity<Void>{
 
-        val services = authServices.login();
-
-
-        /*
-        return CommonResponse(message = "success" , code = "200",
-            body = , errorCode = "null")
-
-         */
+        val url = authServices.login();
+        return ResponseEntity.status(HttpStatus.FOUND)  // 302
+            .header(HttpHeaders.LOCATION, url)
+            .build()
     }
 /*
     @PostMapping("/login")
