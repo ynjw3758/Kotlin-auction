@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.http.HttpStatus
-import java.net.URI
 
 private val log = LoggerFactory.getLogger(AuthController::class.java)
 
@@ -33,6 +32,7 @@ class AuthController(private val authServices: AuthServices, private val respons
         //authService.handleCallback(code, state)
          log.info("state :" + state)
          log.info("code:" + code)
+        val response = authServices.completeOidcLogin(state, code);
         // 로그인 성공 후 프론트로 보내거나(302), 그냥 OK 내려도 됨
         return ResponseEntity.status(302)
             .header("Location", "http://localhost:3000/login/success")
@@ -41,7 +41,7 @@ class AuthController(private val authServices: AuthServices, private val respons
 
     @GetMapping("/login")
     fun normalLogin(): ResponseEntity<Void>{
-
+        log.info("로그인 시작")
         val url = authServices.login();
         return ResponseEntity.status(HttpStatus.FOUND)  // 302
             .header(HttpHeaders.LOCATION, url)

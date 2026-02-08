@@ -1,11 +1,12 @@
 package com.auction.auction.auth.service
 
-import com.auction.auction.auth.dto.request.LoginRequest
-import com.auction.auction.auth.dto.response.LoginBody
-import com.auction.auction.auth.exception.LoginFailException
+import com.auction.auction.auth.exception.AuthErrorCode
 import com.auction.auction.auth.jwt.JwtProvider
 import com.auction.auction.auth.oidc.KeycloakAuthUrlBuilder
+import com.auction.auction.auth.oidc.KeycloakIdTokenVerifier
+import com.auction.auction.auth.oidc.KeycloakOidcClient
 import com.auction.auction.auth.oidc.OidcStatePayload
+import com.auction.auction.common.exception.ApiException
 import com.auction.auction.user.repo.UserInfoRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -20,8 +21,28 @@ class AuthServices(private final val userRepository : UserInfoRepository,
                    private final val JwtProvider : JwtProvider,
                    private final val RedisService: RedisServices,
                    private final val OidcStateService:OidcStateService,
-                   private final val KeycloakAuthUrlBuilder : KeycloakAuthUrlBuilder
+                   private final val KeycloakAuthUrlBuilder : KeycloakAuthUrlBuilder,
+                   private final val KeycloakOidcClient : KeycloakOidcClient,
+                   private final val KeycloakIdTokenVerifier: KeycloakIdTokenVerifier
                    ) {
+
+    fun completeOidcLogin(state: String , code: String) {
+
+        log.info("callback 로그인 처리")
+        val statValid = RedisService.validateOidcState(state)
+        log.info("stat 값 검증 :" + statValid)
+        RedisService.consumeOidcState(state)
+        // ✅ 3) code -> token 교환 (RestClient로)
+        val token = KeycloakOidcClient.exchangeCodeForToken(code , statValid.codeVerifier)
+        // ✅ 2) nonce 검증 (id_token 필요)
+        val idToken = token.idToken ?: throw ApiException(AuthErrorCode.OIDC_NONCE_MISMATCH)
+        //3) nonce 검증 
+        KeycloakIdTokenVerifier.verifyNonce(idToken , statValid.nonce)
+        // ✅ 4) (선택) userinfo 호출
+        val userInfo = KeycloakOidcClient.fetchUserInfo(token.accessToken)
+        log.info("userinfo: {}", userInfo)
+
+    }
 
     fun login():String{
 
@@ -31,6 +52,8 @@ class AuthServices(private final val userRepository : UserInfoRepository,
         //keyloak으로 요청하기
         val stat = OidcStateService.generateState()
         val nonce = OidcStateService.generateNonce()
+        log.info(stat.toString())
+        log.info(nonce)
         OidcStateService.store(
             stat,
             OidcStatePayload(

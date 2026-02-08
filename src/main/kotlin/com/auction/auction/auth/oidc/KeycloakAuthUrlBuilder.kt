@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.util.UriComponentsBuilder
 
 
-private val log = LoggerFactory.getLogger(AuthServices::class.java)
+private val log = LoggerFactory.getLogger(KeycloakAuthUrlBuilder::class.java)
 @Service
 class KeycloakAuthUrlBuilder(
     @Value("\${keycloak.base-url}") private val baseUrl: String,
