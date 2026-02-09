@@ -45,7 +45,7 @@ class KeycloakOidcClient(
             .body(TokenResponse::class.java)
             ?: throw ApiException(AuthErrorCode.OIDC_TOKEN_EXCHANGE_FAILED)
     }
-
+  //KeycloakUserInfo
     fun fetchUserInfo(accessToken: String): KeycloakUserInfo =
         restClient.get()
             .uri("$baseUrl/realms/$realm/protocol/openid-connect/userinfo")

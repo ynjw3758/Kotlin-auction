@@ -8,9 +8,11 @@ import com.auction.auction.auth.oidc.KeycloakOidcClient
 import com.auction.auction.auth.oidc.OidcStatePayload
 import com.auction.auction.common.exception.ApiException
 import com.auction.auction.user.repo.UserInfoRepository
+import com.auction.auction.user.service.UserCommandService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
+import java.util.Base64
 
 
 private val log = LoggerFactory.getLogger(AuthServices::class.java)
@@ -23,7 +25,8 @@ class AuthServices(private final val userRepository : UserInfoRepository,
                    private final val OidcStateService:OidcStateService,
                    private final val KeycloakAuthUrlBuilder : KeycloakAuthUrlBuilder,
                    private final val KeycloakOidcClient : KeycloakOidcClient,
-                   private final val KeycloakIdTokenVerifier: KeycloakIdTokenVerifier
+                   private final val KeycloakIdTokenVerifier: KeycloakIdTokenVerifier,
+                   private final val UserCommandService : UserCommandService
                    ) {
 
     fun completeOidcLogin(state: String , code: String) {
@@ -36,11 +39,13 @@ class AuthServices(private final val userRepository : UserInfoRepository,
         val token = KeycloakOidcClient.exchangeCodeForToken(code , statValid.codeVerifier)
         // ✅ 2) nonce 검증 (id_token 필요)
         val idToken = token.idToken ?: throw ApiException(AuthErrorCode.OIDC_NONCE_MISMATCH)
-        //3) nonce 검증 
+        //3) nonce 검증
         KeycloakIdTokenVerifier.verifyNonce(idToken , statValid.nonce)
         // ✅ 4) (선택) userinfo 호출
         val userInfo = KeycloakOidcClient.fetchUserInfo(token.accessToken)
         log.info("userinfo: {}", userInfo)
+        // 5) (선택) userinfo 데이터 db의 저장
+        UserCommandService.upsertFromKeycloak(userInfo);
 
     }
 

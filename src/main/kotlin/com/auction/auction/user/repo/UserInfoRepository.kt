@@ -1,10 +1,12 @@
 package com.auction.auction.user.repo
 
-import com.auction.auction.user.entity.UserInfo
+
+import com.auction.auction.user.entity.Users
 import org.springframework.data.jpa.repository.JpaRepository
+import java.util.UUID
 
 
-interface UserInfoRepository : JpaRepository<UserInfo, String> {
+interface UserInfoRepository : JpaRepository<Users, UUID> {
 
-    fun findByLoginId(loginId: String): UserInfo?
+    fun findByKeycloakSub(keycloakSub: String): Users?
 }
