@@ -12,7 +12,6 @@ import com.auction.auction.user.service.UserCommandService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
-import java.util.Base64
 
 
 private val log = LoggerFactory.getLogger(AuthServices::class.java)
@@ -45,7 +44,11 @@ class AuthServices(private final val userRepository : UserInfoRepository,
         val userInfo = KeycloakOidcClient.fetchUserInfo(token.accessToken)
         log.info("userinfo: {}", userInfo)
         // 5) (선택) userinfo 데이터 db의 저장
-        UserCommandService.upsertFromKeycloak(userInfo);
+        val User = UserCommandService.upsertFromKeycloak(userInfo);
+        val accessToken = JwtProvider.CreateAcessToken(User.id, User.loginId)
+        val refreshToken = JwtProvider.CreateRefreshToken(User.id)
+        log.info("refresh token: {}", refreshToken)
+        log.info("accessToken: {}", accessToken)
 
     }
 
@@ -68,6 +71,29 @@ class AuthServices(private final val userRepository : UserInfoRepository,
             )
         )
         val keyloak_response = KeycloakAuthUrlBuilder.buildNormal(state = stat ,nonce = nonce )
+        return keyloak_response
+
+    }
+
+    fun kalogin():String{
+
+        //Todo
+        //stat, nonce 랜덤값 생성
+        //생성된 데이터 redis의 저장
+        //keyloak으로 요청하기
+        val stat = OidcStateService.generateState()
+        val nonce = OidcStateService.generateNonce()
+        log.info(stat.toString())
+        log.info(nonce)
+        OidcStateService.store(
+            stat,
+            OidcStatePayload(
+                nonce = nonce,
+                returnUrl = null,        // 필요하면 넣기
+                codeVerifier = null      // PKCE 쓰면 넣기
+            )
+        )
+        val keyloak_response = KeycloakAuthUrlBuilder.buildKakao(state = stat ,nonce = nonce )
         return keyloak_response
 
     }

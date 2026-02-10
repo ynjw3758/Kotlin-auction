@@ -20,6 +20,10 @@ class KeycloakAuthUrlBuilder(
         return build(state, nonce, idpHint = null)
     }
 
+    fun buildKakao(state: String , nonce: String) :String{
+        return build(state, nonce, idpHint = "kakao")
+    }
+
     private fun build(state: String, nonce: String, idpHint: String?): String {
         val builder = UriComponentsBuilder
             .fromHttpUrl("$baseUrl/realms/$realm/protocol/openid-connect/auth")

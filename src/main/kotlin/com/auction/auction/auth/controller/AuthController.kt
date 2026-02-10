@@ -24,6 +24,8 @@ private val log = LoggerFactory.getLogger(AuthController::class.java)
 @RequestMapping("/api/auth")
 class AuthController(private val authServices: AuthServices, private val response: HttpServletResponse) {
 
+
+
     @GetMapping("/callback")
     fun callback(
         @RequestParam code: String,
@@ -35,7 +37,7 @@ class AuthController(private val authServices: AuthServices, private val respons
         val response = authServices.completeOidcLogin(state, code);
         // 로그인 성공 후 프론트로 보내거나(302), 그냥 OK 내려도 됨
         return ResponseEntity.status(302)
-            .header("Location", "http://localhost:3000/login/success")
+            .header("Location", "http://localhost:3000/")
             .build()
     }
 
@@ -47,6 +49,15 @@ class AuthController(private val authServices: AuthServices, private val respons
             .header(HttpHeaders.LOCATION, url)
             .build()
     }
+    @GetMapping("kalogin")
+    fun kalogin(): ResponseEntity<Void>{
+
+        val url = authServices.kalogin();
+        return ResponseEntity.status(HttpStatus.FOUND)  // 302
+            .header(HttpHeaders.LOCATION, url)
+            .build()
+    }
+
 /*
     @PostMapping("/login")
     fun Login(@RequestBody req: LoginRequest/*, errors: Errors*/): CommonResponse<LoginResponse> {

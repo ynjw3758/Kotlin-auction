@@ -25,7 +25,7 @@ class JwtProvider(
            private val refreshExpireSeconds: Long,
     ) {
 
-    fun CreateAcessToken(connectId:String , loginId:String): Pair<String, Long>{
+    fun CreateAcessToken(connectId: UUID, loginId:String): Pair<String, Long>{
         val now = Date()
         val exp = Date(now.time + accessExpireSeconds * 1000)
 
@@ -40,7 +40,7 @@ class JwtProvider(
         return token to (exp.time / 1000)
     }
 
-    fun CreateRefreshToken(connectId:String): String {
+    fun CreateRefreshToken(connectId: UUID): String {
             val now = Date()
             val exp = Date(now.time + refreshExpireSeconds * 1000)
 
