@@ -2,7 +2,9 @@ package com.auction.auction.auth.controller
 
 import com.auction.auction.auth.service.AuthServices
 import com.auction.auction.auth.dto.request.LoginRequest
+import com.auction.auction.auth.dto.request.SignUpRequest
 import com.auction.auction.auth.dto.response.LoginResponse
+import com.auction.auction.auth.oidc.KeycloakSignUpService
 import com.auction.auction.common.exception.CommonResponse
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
@@ -22,9 +24,17 @@ private val log = LoggerFactory.getLogger(AuthController::class.java)
 
 @RestController
 @RequestMapping("/api/auth")
-class AuthController(private val authServices: AuthServices, private val response: HttpServletResponse) {
+class AuthController(private val authServices: AuthServices,
+                           private val response: HttpServletResponse,
+                           private val KeycloakSignUpService : KeycloakSignUpService
+) {
+    @PostMapping("/sign")
+    fun Sign(@RequestBody req : SignUpRequest) :ResponseEntity<Any>{
+        log.info("회원가입 데이터 :" + req);
+        KeycloakSignUpService.createUser(req);
+        return ResponseEntity.ok(mapOf("message" to "회원가입 완료"))
 
-
+    }
 
     @GetMapping("/callback")
     fun callback(

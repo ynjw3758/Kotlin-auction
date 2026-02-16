@@ -13,6 +13,7 @@ class SecurityConfig {
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
+            .cors {  }
             .authorizeHttpRequests { auth ->
                 auth.requestMatchers("/api/auth/login").permitAll()
                 auth.anyRequest().permitAll()   // 개발 중이니 일단 전체 허용
